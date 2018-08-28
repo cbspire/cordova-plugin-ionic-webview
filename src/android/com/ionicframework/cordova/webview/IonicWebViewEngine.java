@@ -70,10 +70,12 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
   private class ServerClient extends SystemWebViewClient
   {
     private ConfigXmlParser parser;
+    private boolean exitFromLocal;
 
     public ServerClient(SystemWebViewEngine parentEngine, ConfigXmlParser parser) {
       super(parentEngine);
       this.parser = parser;
+      this.exitFromLocal = false;
     }
 
     @Override
@@ -84,9 +86,15 @@ public class IonicWebViewEngine extends SystemWebViewEngine {
     @Override
     public void onPageStarted(WebView view, String url, Bitmap favicon) {
       super.onPageStarted(view, url, favicon);
-      if (url.equals(parser.getLaunchUrl())) {
+      if (url.equals(parser.getLaunchUrl())) { // First start
         view.stopLoading();
         view.loadUrl(CDV_LOCAL_SERVER);
+      } else if (!url.startsWith(CDV_LOCAL_SERVER)) { // Exit from local
+        this.exitFromLocal = true;
+      } else if(this.exitFromLocal && url.startsWith(CDV_LOCAL_SERVER)) {
+        this.exitFromLocal = false;
+        view.stopLoading();
+        view.loadUrl(url);
       }
     }
 
